@@ -36,7 +36,7 @@ export const siteConfig = {
   internalSupportHref: "/doneren",
   donationUrl: officialDonationUrl,
   contact: {
-    email: "info@goc-parkstad.nl",
+    email: "chappin.roger@icloud.com",
     phone: "0685002627",
     phoneDisplay: "06 8500 2627",
     phoneHref: "tel:+31685002627",
