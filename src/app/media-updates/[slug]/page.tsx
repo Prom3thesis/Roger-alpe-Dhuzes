@@ -3,14 +3,21 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { MarkdownContent } from "@/components/content/MarkdownContent";
+import { PortableTextContent } from "@/components/content/PortableTextContent";
 import { SectionContainer } from "@/components/layout/SectionContainer";
 import { Button } from "@/components/ui/Button";
 import {
-  formatUpdateDate,
+  formatMediaUpdateDate,
+  getMediaUpdateStaticSlugs,
+  getSanityUpdateEntryBySlug,
+} from "@/lib/content/media-updates-hybrid";
+import {
   getUpdateBySlug,
-  getUpdateSlugs,
   updateCategoryLabels,
+  type UpdateEntry,
 } from "@/lib/content/updates";
+import { urlForSanityImage } from "@/sanity/image";
+import type { UpdateEntryDetail, UpdateEntryCategory } from "@/sanity/types";
 
 type UpdateDetailPageProps = {
   params: Promise<{
@@ -18,54 +25,103 @@ type UpdateDetailPageProps = {
   }>;
 };
 
-export const dynamicParams = false;
+const sanityCategoryLabels: Record<UpdateEntryCategory, string> = {
+  diary: "Dagboek",
+  campaign: "Campagne",
+  media: "Media",
+};
 
-export function generateStaticParams() {
-  return getUpdateSlugs().map((slug) => ({ slug }));
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  const slugs = await getMediaUpdateStaticSlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
-export default async function UpdateDetailPage({ params }: UpdateDetailPageProps) {
-  const { slug } = await params;
-  const update = getUpdateBySlug(slug);
+function SupportCta() {
+  return (
+    <div className="mt-8 rounded-lg bg-campaign-navy p-6 text-white sm:p-8">
+      <p className="text-sm font-black uppercase tracking-normal text-campaign-gold">
+        Steun de campagne
+      </p>
+      <h2 className="mt-3 text-2xl font-black leading-tight sm:text-3xl">
+        Help Roger zijn belofte richting Alpe d&apos;HuZes waarmaken.
+      </h2>
+      <p className="mt-4 max-w-2xl text-base leading-7 text-white/75">
+        Deze updates laten zien hoe de campagne groeit. Steun Roger via de
+        centrale donatie- en steunpagina.
+      </p>
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+        <Button className="w-full sm:w-auto" href="/doneren">
+          Steun Roger
+        </Button>
+        <Button
+          className="w-full border-white/25 bg-white/10 text-white hover:border-white/50 hover:bg-white/15 sm:w-auto"
+          href="/de-tocht"
+          variant="outline"
+        >
+          Bekijk de tocht
+        </Button>
+      </div>
+    </div>
+  );
+}
 
-  if (!update) {
-    notFound();
-  }
+function PageHero({
+  categoryLabel,
+  date,
+  excerpt,
+  title,
+}: {
+  categoryLabel: string;
+  date: string;
+  excerpt: string;
+  title: string;
+}) {
+  return (
+    <section className="bg-campaign-navy text-white">
+      <SectionContainer className="py-12 sm:py-16">
+        <Link
+          className="inline-flex text-sm font-black text-campaign-gold underline-offset-4 hover:underline"
+          href="/media-updates"
+          prefetch={false}
+        >
+          Terug naar media & updates
+        </Link>
 
+        <div className="mt-8 max-w-4xl">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-normal text-campaign-gold">
+              {categoryLabel}
+            </span>
+            <time className="text-sm font-bold text-white/70" dateTime={date}>
+              {formatMediaUpdateDate(date)}
+            </time>
+          </div>
+
+          <h1 className="mt-5 text-4xl font-black leading-tight tracking-normal sm:text-5xl lg:text-6xl">
+            {title}
+          </h1>
+          <p className="mt-6 max-w-3xl text-lg leading-8 text-white/78 sm:text-xl sm:leading-9">
+            {excerpt}
+          </p>
+        </div>
+      </SectionContainer>
+    </section>
+  );
+}
+
+function MarkdownUpdateArticle({ update }: { update: UpdateEntry }) {
   const { metadata } = update;
-  const formattedDate = formatUpdateDate(metadata.date);
 
   return (
     <>
-      <section className="bg-campaign-navy text-white">
-        <SectionContainer className="py-12 sm:py-16">
-          <Link
-            className="inline-flex text-sm font-black text-campaign-gold underline-offset-4 hover:underline"
-            href="/media-updates"
-            prefetch={false}
-          >
-            Terug naar media & updates
-          </Link>
-
-          <div className="mt-8 max-w-4xl">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-normal text-campaign-gold">
-                {updateCategoryLabels[metadata.category]}
-              </span>
-              <time className="text-sm font-bold text-white/70" dateTime={metadata.date}>
-                {formattedDate}
-              </time>
-            </div>
-
-            <h1 className="mt-5 text-4xl font-black leading-tight tracking-normal sm:text-5xl lg:text-6xl">
-              {metadata.title}
-            </h1>
-            <p className="mt-6 max-w-3xl text-lg leading-8 text-white/78 sm:text-xl sm:leading-9">
-              {metadata.excerpt}
-            </p>
-          </div>
-        </SectionContainer>
-      </section>
+      <PageHero
+        categoryLabel={updateCategoryLabels[metadata.category]}
+        date={metadata.date}
+        excerpt={metadata.excerpt}
+        title={metadata.title}
+      />
 
       <section className="bg-campaign-background">
         <SectionContainer className="py-12 sm:py-16">
@@ -104,7 +160,7 @@ export default async function UpdateDetailPage({ params }: UpdateDetailPageProps
                     </h2>
                     <p className="mt-4 text-base leading-7 text-white/76">
                       De video van het RTV Parkstad-interview is beschikbaar en
-                      opent via de officiële YouTube-route.
+                      opent via de officiele YouTube-route.
                     </p>
                     <Button
                       className="mt-6 w-full whitespace-normal px-4 py-3 text-center leading-tight sm:w-auto"
@@ -163,33 +219,96 @@ export default async function UpdateDetailPage({ params }: UpdateDetailPageProps
               ) : null}
             </div>
 
-            <div className="mt-8 rounded-lg bg-campaign-navy p-6 text-white sm:p-8">
-              <p className="text-sm font-black uppercase tracking-normal text-campaign-gold">
-                Steun de campagne
-              </p>
-              <h2 className="mt-3 text-2xl font-black leading-tight sm:text-3xl">
-                Help Roger zijn belofte richting Alpe d&apos;HuZes waarmaken.
-              </h2>
-              <p className="mt-4 max-w-2xl text-base leading-7 text-white/75">
-                Deze updates laten zien hoe de campagne groeit. Steun Roger via
-                de centrale donatie- en steunpagina.
-              </p>
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                <Button className="w-full sm:w-auto" href="/doneren">
-                  Steun Roger
-                </Button>
-                <Button
-                  className="w-full border-white/25 bg-white/10 text-white hover:border-white/50 hover:bg-white/15 sm:w-auto"
-                  href="/de-tocht"
-                  variant="outline"
-                >
-                  Bekijk de tocht
-                </Button>
-              </div>
-            </div>
+            <SupportCta />
           </article>
         </SectionContainer>
       </section>
     </>
   );
+}
+
+function SanityUpdateArticle({ update }: { update: UpdateEntryDetail }) {
+  const mainImageUrl = update.mainImage?.asset?._ref
+    ? urlForSanityImage(update.mainImage)
+        .width(1400)
+        .height(900)
+        .fit("max")
+        .auto("format")
+        .url()
+    : null;
+  const externalHref = update.externalUrl ?? update.videoUrl;
+  const externalLabel =
+    update.externalLabel ??
+    (update.videoUrl ? "Bekijk video" : "Bekijk externe bron");
+
+  return (
+    <>
+      <PageHero
+        categoryLabel={sanityCategoryLabels[update.category]}
+        date={update.contentDate}
+        excerpt={update.excerpt}
+        title={update.title}
+      />
+
+      <section className="bg-campaign-background">
+        <SectionContainer className="py-12 sm:py-16">
+          <article className="mx-auto max-w-4xl">
+            {mainImageUrl ? (
+              <div className="mb-9 overflow-hidden rounded-lg border border-campaign-border bg-white shadow-shell">
+                <Image
+                  alt={update.mainImageAlt ?? ""}
+                  className="h-auto w-full object-cover"
+                  height={900}
+                  priority
+                  sizes="(min-width: 1024px) 896px, calc(100vw - 40px)"
+                  src={mainImageUrl}
+                  width={1400}
+                />
+              </div>
+            ) : null}
+
+            <div className="rounded-lg border border-campaign-border bg-white p-6 shadow-shell sm:p-8">
+              <PortableTextContent value={update.body} />
+
+              {externalHref ? (
+                <div className="mt-6 rounded-lg border border-campaign-border bg-campaign-background p-4">
+                  <p className="text-sm font-bold leading-6 text-campaign-muted">
+                    Bij deze update hoort een externe bron of media-link.
+                  </p>
+                  <Button
+                    className="mt-4"
+                    href={externalHref}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                    variant="secondary"
+                  >
+                    {externalLabel}
+                  </Button>
+                </div>
+              ) : null}
+            </div>
+
+            <SupportCta />
+          </article>
+        </SectionContainer>
+      </section>
+    </>
+  );
+}
+
+export default async function UpdateDetailPage({ params }: UpdateDetailPageProps) {
+  const { slug } = await params;
+  const sanityUpdate = await getSanityUpdateEntryBySlug(slug);
+
+  if (sanityUpdate) {
+    return <SanityUpdateArticle update={sanityUpdate} />;
+  }
+
+  const markdownUpdate = getUpdateBySlug(slug);
+
+  if (!markdownUpdate) {
+    notFound();
+  }
+
+  return <MarkdownUpdateArticle update={markdownUpdate} />;
 }

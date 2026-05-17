@@ -8,7 +8,11 @@ import { TrainingImageStrip } from "@/components/media/TrainingImageStrip";
 import { UpdatesGrid } from "@/components/media/UpdatesGrid";
 import { featuredMediaItem } from "@/data/media";
 import { siteConfig } from "@/data/site";
-import { getAllUpdates, getFeaturedUpdates } from "@/lib/content/updates";
+import {
+  getAllMediaUpdateListItems,
+  getFeaturedMediaUpdateListItems,
+  getMediaUpdateTimelineItems,
+} from "@/lib/content/media-updates-hybrid";
 
 const timelineSlugs = [
   "waarom-roger-alpe-dhuzes-loopt",
@@ -18,12 +22,12 @@ const timelineSlugs = [
   "roger-bij-rtv-parkstad",
 ] as const;
 
-export default function MediaUpdatesPage() {
-  const allUpdates = getAllUpdates();
-  const featuredUpdates = getFeaturedUpdates();
-  const timelineUpdates = timelineSlugs
-    .map((slug) => allUpdates.find((update) => update.metadata.slug === slug))
-    .filter((update) => update !== undefined);
+export default async function MediaUpdatesPage() {
+  const [allUpdates, featuredUpdates] = await Promise.all([
+    getAllMediaUpdateListItems(),
+    getFeaturedMediaUpdateListItems(),
+  ]);
+  const timelineUpdates = getMediaUpdateTimelineItems(allUpdates, timelineSlugs);
 
   return (
     <>

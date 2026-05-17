@@ -2,14 +2,13 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { SectionContainer } from "@/components/layout/SectionContainer";
-import type { UpdateEntry } from "@/lib/content/updates";
 import {
   formatUpdateDate,
-  updateCategoryLabels,
-} from "@/lib/content/updates";
+  type MediaUpdateListItem,
+} from "@/lib/content/media-updates-hybrid";
 
 type FeaturedUpdatesSectionProps = {
-  updates: UpdateEntry[];
+  updates: MediaUpdateListItem[];
 };
 
 export function FeaturedUpdatesSection({ updates }: FeaturedUpdatesSectionProps) {
@@ -36,44 +35,42 @@ export function FeaturedUpdatesSection({ updates }: FeaturedUpdatesSectionProps)
 
         <div className="mt-9 grid gap-5 md:grid-cols-2">
           {updates.map((update) => {
-            const { metadata } = update;
-
             return (
               <article
                 className="overflow-hidden rounded-lg border border-campaign-border bg-white shadow-shell"
-                key={metadata.slug}
+                key={update.slug}
               >
-                {metadata.featuredImage ? (
+                {update.image ? (
                   <Image
-                    alt={metadata.featuredImageAlt ?? ""}
+                    alt={update.image.alt}
                     className="aspect-[16/10] w-full object-cover"
                     height={700}
                     sizes="(min-width: 768px) 50vw, calc(100vw - 40px)"
-                    src={metadata.featuredImage}
+                    src={update.image.src}
                     width={1000}
                   />
                 ) : null}
                 <div className="p-5 sm:p-6">
                   <div className="flex flex-wrap items-center gap-3">
                     <span className="rounded-full border border-campaign-border bg-campaign-background px-3 py-1 text-xs font-black uppercase tracking-normal text-campaign-red">
-                      {updateCategoryLabels[metadata.category]}
+                      {update.categoryLabel}
                     </span>
                     <time
                       className="text-sm font-bold text-campaign-muted"
-                      dateTime={metadata.date}
+                      dateTime={update.contentDate}
                     >
-                      {formatUpdateDate(metadata.date)}
+                      {formatUpdateDate(update.contentDate)}
                     </time>
                   </div>
                   <h3 className="mt-4 text-2xl font-black leading-tight text-campaign-navy">
-                    {metadata.title}
+                    {update.title}
                   </h3>
                   <p className="mt-4 text-sm leading-6 text-campaign-muted sm:text-base sm:leading-7">
-                    {metadata.excerpt}
+                    {update.excerpt}
                   </p>
                   <Link
                     className="mt-5 inline-flex text-sm font-black text-campaign-blue underline-offset-4 hover:underline"
-                    href={`/media-updates/${metadata.slug}`}
+                    href={`/media-updates/${update.slug}`}
                   >
                     Lees update
                   </Link>

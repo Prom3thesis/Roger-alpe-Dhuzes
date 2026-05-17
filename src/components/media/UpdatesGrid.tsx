@@ -1,14 +1,13 @@
 import Link from "next/link";
 
 import { SectionContainer } from "@/components/layout/SectionContainer";
-import type { UpdateEntry } from "@/lib/content/updates";
 import {
   formatUpdateDate,
-  updateCategoryLabels,
-} from "@/lib/content/updates";
+  type MediaUpdateListItem,
+} from "@/lib/content/media-updates-hybrid";
 
 type UpdatesGridProps = {
-  updates: UpdateEntry[];
+  updates: MediaUpdateListItem[];
 };
 
 export function UpdatesGrid({ updates }: UpdatesGridProps) {
@@ -32,33 +31,31 @@ export function UpdatesGrid({ updates }: UpdatesGridProps) {
 
           <div className="grid gap-4 md:grid-cols-2">
             {updates.map((update) => {
-              const { metadata } = update;
-
               return (
                 <article
                   className="rounded-lg border border-campaign-border bg-campaign-background p-5"
-                  key={metadata.slug}
+                  key={update.slug}
                 >
                   <div className="flex flex-wrap items-center gap-3">
                     <span className="text-xs font-black uppercase tracking-normal text-campaign-red">
-                      {updateCategoryLabels[metadata.category]}
+                      {update.categoryLabel}
                     </span>
                     <time
                       className="text-xs font-bold text-campaign-muted"
-                      dateTime={metadata.date}
+                      dateTime={update.contentDate}
                     >
-                      {formatUpdateDate(metadata.date)}
+                      {formatUpdateDate(update.contentDate)}
                     </time>
                   </div>
                   <h3 className="mt-3 text-xl font-black leading-tight text-campaign-navy">
-                    {metadata.title}
+                    {update.title}
                   </h3>
                   <p className="mt-3 text-sm leading-6 text-campaign-muted">
-                    {metadata.excerpt}
+                    {update.excerpt}
                   </p>
                   <Link
                     className="mt-5 inline-flex text-sm font-black text-campaign-blue underline-offset-4 hover:underline"
-                    href={`/media-updates/${metadata.slug}`}
+                    href={`/media-updates/${update.slug}`}
                   >
                     Lees update
                   </Link>

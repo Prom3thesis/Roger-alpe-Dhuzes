@@ -1,11 +1,13 @@
 import Link from "next/link";
 
 import { SectionContainer } from "@/components/layout/SectionContainer";
-import type { UpdateEntry } from "@/lib/content/updates";
-import { formatUpdateDate } from "@/lib/content/updates";
+import {
+  formatUpdateDate,
+  type MediaUpdateListItem,
+} from "@/lib/content/media-updates-hybrid";
 
 type CampaignTimelineProps = {
-  updates: UpdateEntry[];
+  updates: MediaUpdateListItem[];
 };
 
 export function CampaignTimeline({ updates }: CampaignTimelineProps) {
@@ -28,25 +30,23 @@ export function CampaignTimeline({ updates }: CampaignTimelineProps) {
 
         <ol className="mx-auto mt-10 grid max-w-5xl gap-4 md:grid-cols-2 lg:grid-cols-3">
           {updates.map((update) => {
-            const { metadata } = update;
-
             return (
               <li
                 className="rounded-lg border border-campaign-border bg-white p-5 shadow-shell"
-                key={metadata.slug}
+                key={update.slug}
               >
                 <time
                   className="text-xs font-black uppercase tracking-normal text-campaign-red"
-                  dateTime={metadata.date}
+                  dateTime={update.contentDate}
                 >
-                  {formatUpdateDate(metadata.date)}
+                  {formatUpdateDate(update.contentDate)}
                 </time>
                 <h3 className="mt-3 text-xl font-black leading-tight text-campaign-navy">
-                  {metadata.title}
+                  {update.title}
                 </h3>
                 <Link
                   className="mt-4 inline-flex text-sm font-black text-campaign-blue underline-offset-4 hover:underline"
-                  href={`/media-updates/${metadata.slug}`}
+                  href={`/media-updates/${update.slug}`}
                 >
                   Bekijk moment
                 </Link>
