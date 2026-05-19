@@ -1,6 +1,6 @@
 import {defineQuery} from "next-sanity";
 
-const publicUpdateEntryFilter = `_type == "updateEntry" && defined(slug.current) && defined(publishedAt)`;
+const publicUpdateEntryFilter = `_type == 'updateEntry' && defined(slug.current) && defined(publishedAt)`;
 
 const updateEntryListProjection = `{
   _id,
